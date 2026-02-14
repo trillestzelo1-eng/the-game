@@ -1,111 +1,486 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Push-Up Power 💪</title>
+  <meta charset="utf-8" />
+  <title>Spam for Gains 💪</title>
 
-    <!-- Prevent iPhone zoom -->
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <!-- iPhone anti-zoom -->
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 
-    <style>
-        body {
-            text-align: center;
-            font-family: Arial, sans-serif;
-            background: #111;
-            color: white;
-            margin: 0;
-            padding: 20px;
-            -webkit-text-size-adjust: 100%;
-            touch-action: manipulation;
-        }
-
-        h1 {
-            margin-top: 20px;
-        }
-
-        #girl {
-            font-size: 120px;
-            transition: transform 0.15s ease, font-size 0.2s ease;
-            margin-top: 40px;
-        }
-
-        button {
-            padding: 25px 50px;
-            font-size: 22px;
-            margin-top: 40px;
-            border: none;
-            border-radius: 15px;
-            background: #ff4081;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-
-            /* Anti-zoom + anti-select */
-            touch-action: manipulation;
-            -webkit-tap-highlight-color: transparent;
-            user-select: none;
-            -webkit-user-select: none;
-        }
-
-        button:active {
-            transform: scale(0.92);
-        }
-
-        #counter {
-            margin-top: 25px;
-            font-size: 24px;
-        }
-    </style>
-</head>
-<body>
-
-<h1>Spam for Gains 💪</h1>
-
-<div id="girl">🏋️‍♀️</div>
-
-<button id="pushBtn">PUSH UP</button>
-
-<div id="counter">Push-ups: 0</div>
-
-<script>
-    let count = 0;
-    let size = 120;
-
-    function doPushup() {
-        count++;
-        document.getElementById("counter").innerText = "Push-ups: " + count;
-
-        const girl = document.getElementById("girl");
-
-        // Push-up animation
-        girl.style.transform = "translateY(25px)";
-        setTimeout(() => {
-            girl.style.transform = "translateY(0px)";
-        }, 100);
-
-        // Grow muscles every 10 push-ups
-        if (count % 10 === 0) {
-            size += 10;
-            girl.style.fontSize = size + "px";
-        }
+  <style>
+    :root{
+      --bg:#0f0f12;
+      --panel:#171720;
+      --accent:#ff4081;
+      --text:#ffffff;
+      --muted:#b8b8c7;
+      --rage:#ff3b30;
     }
 
-    // Use pointer events (better for iPhone spam tapping)
-    document.getElementById("pushBtn").addEventListener("pointerdown", (e) => {
-        e.preventDefault();
-        doPushup();
-    });
+    *{ box-sizing:border-box; }
 
-    // Prevent iOS double-tap zoom
+    body{
+      margin:0;
+      padding:18px 16px 28px;
+      background: radial-gradient(1200px 600px at 50% -100px, #24243a 0%, var(--bg) 55%);
+      color:var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      text-align:center;
+      -webkit-text-size-adjust:100%;
+      touch-action: manipulation;
+      overflow-x:hidden;
+    }
+
+    h1{
+      margin:10px 0 6px;
+      font-size: clamp(22px, 5vw, 34px);
+      letter-spacing:0.2px;
+    }
+
+    .sub{
+      margin:0 0 14px;
+      color:var(--muted);
+      font-size: 14px;
+    }
+
+    .stage{
+      margin:18px auto 10px;
+      width:min(520px, 100%);
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius:18px;
+      padding:18px 12px 14px;
+      box-shadow: 0 18px 60px rgba(0,0,0,0.35);
+      position:relative;
+    }
+
+    .avatarWrap{
+      position:relative;
+      height: 210px;
+      display:grid;
+      place-items:center;
+      user-select:none;
+      -webkit-user-select:none;
+      touch-action: manipulation;
+    }
+
+    /* Main lifter emoji */
+    #girl{
+      font-size: 112px;
+      line-height:1;
+      transform: translateY(0);
+      transition: transform 0.12s ease;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.35));
+      will-change: transform, filter;
+    }
+
+    /* Growing arms */
+    .arms{
+      position:absolute;
+      inset: 0;
+      display:grid;
+      place-items:center;
+      pointer-events:none;
+      opacity: 0.0;
+      transform: translateY(6px);
+      transition: opacity 0.2s ease;
+    }
+    .arm{
+      position:absolute;
+      font-size: 44px;
+      filter: drop-shadow(0 10px 18px rgba(0,0,0,0.35));
+      transform-origin: center;
+      will-change: transform, opacity;
+      opacity: 0.95;
+    }
+    #armL{ transform: translateX(-92px) translateY(4px) scale(1); }
+    #armR{ transform: translateX( 92px) translateY(4px) scale(1); }
+
+    /* Sweat droplets (spawned) */
+    .sweat{
+      position:absolute;
+      font-size: 22px;
+      opacity: 0.95;
+      filter: drop-shadow(0 8px 12px rgba(0,0,0,0.35));
+      animation: sweatFall 0.9s ease-out forwards;
+      pointer-events:none;
+      will-change: transform, opacity;
+    }
+    @keyframes sweatFall{
+      0%   { transform: translateY(0) translateX(0) scale(0.9); opacity: 0.0; }
+      12%  { opacity: 1.0; }
+      100% { transform: translateY(56px) translateX(var(--dx)) scale(1.05) rotate(10deg); opacity: 0.0; }
+    }
+
+    /* Stats row */
+    .stats{
+      margin-top: 10px;
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+    .pill{
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.10);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font-size: 14px;
+      color: var(--text);
+      min-width: 120px;
+    }
+    .pill span{
+      color: var(--muted);
+      margin-left:6px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Button */
+    #pushBtn{
+      margin-top: 14px;
+      width:min(360px, 92%);
+      padding: 18px 18px;
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing:0.4px;
+      border: none;
+      border-radius: 16px;
+      background: linear-gradient(180deg, #ff5aa0, var(--accent));
+      color: white;
+      cursor: pointer;
+
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      user-select:none;
+      -webkit-user-select:none;
+
+      box-shadow: 0 14px 40px rgba(255,64,129,0.25);
+      transition: transform 0.06s ease, filter 0.15s ease, box-shadow 0.15s ease;
+    }
+    #pushBtn:active{ transform: scale(0.96); }
+
+    .hint{
+      margin-top: 10px;
+      color: rgba(255,255,255,0.65);
+      font-size: 13px;
+    }
+
+    /* Rage mode visuals */
+    body.rage .stage{
+      border-color: rgba(255,59,48,0.35);
+      box-shadow: 0 18px 80px rgba(255,59,48,0.18), 0 18px 60px rgba(0,0,0,0.35);
+    }
+    body.rage #pushBtn{
+      background: linear-gradient(180deg, #ff6b60, var(--rage));
+      box-shadow: 0 14px 60px rgba(255,59,48,0.25);
+      filter: saturate(1.2);
+    }
+    body.rage #girl{
+      filter: drop-shadow(0 10px 20px rgba(255,59,48,0.25)) drop-shadow(0 10px 18px rgba(0,0,0,0.35));
+    }
+    body.rage .hint{
+      color: rgba(255,200,200,0.85);
+    }
+
+    /* Shake animation in rage */
+    .shake{
+      animation: shake 0.25s linear;
+    }
+    @keyframes shake{
+      0%   { transform: translateX(0); }
+      20%  { transform: translateX(-4px); }
+      40%  { transform: translateX(4px); }
+      60%  { transform: translateX(-3px); }
+      80%  { transform: translateX(3px); }
+      100% { transform: translateX(0); }
+    }
+
+    /* Small footer */
+    .footer{
+      margin-top: 16px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.45);
+    }
+  </style>
+</head>
+
+<body>
+  <h1>Spam for Gains 💪</h1>
+  <p class="sub">Tap fast. Get swole. Trigger Rage Mode. (Sound on 🔊)</p>
+
+  <div class="stage" id="stage">
+    <div class="avatarWrap" id="arena">
+      <div id="girl" aria-label="lifter">🏋️‍♀️</div>
+
+      <div class="arms" id="arms">
+        <div class="arm" id="armL">💪</div>
+        <div class="arm" id="armR">💪</div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="pill"><strong>Push-ups</strong><span id="count">0</span></div>
+      <div class="pill"><strong>Speed</strong><span id="speed">0.0 /s</span></div>
+      <div class="pill"><strong>Mode</strong><span id="mode">Chill</span></div>
+    </div>
+
+    <button id="pushBtn">PUSH UP</button>
+    <div class="hint" id="hint">Tip: tap ~8+ times/sec for 💥 Rage Mode</div>
+  </div>
+
+  <div class="footer">If sound doesn’t play on iPhone, tap once then try again (iOS requires user interaction).</div>
+
+  <script>
+    /***************
+     * iOS anti-zoom
+     ***************/
     let lastTouchEnd = 0;
     document.addEventListener('touchend', function (event) {
-        const now = Date.now();
-        if (now - lastTouchEnd <= 300) {
-            event.preventDefault();
-        }
-        lastTouchEnd = now;
+      const now = Date.now();
+      if (now - lastTouchEnd <= 300) event.preventDefault();
+      lastTouchEnd = now;
     }, { passive: false });
-</script>
 
+    /*********************
+     * State + DOM handles
+     *********************/
+    const girl  = document.getElementById("girl");
+    const arena = document.getElementById("arena");
+    const armsWrap = document.getElementById("arms");
+    const armL = document.getElementById("armL");
+    const armR = document.getElementById("armR");
+
+    const countEl = document.getElementById("count");
+    const speedEl = document.getElementById("speed");
+    const modeEl  = document.getElementById("mode");
+    const hintEl  = document.getElementById("hint");
+    const stageEl = document.getElementById("stage");
+
+    let count = 0;
+
+    // Tap speed tracking (taps in last 1000ms)
+    const tapTimes = [];
+
+    // Muscle growth
+    let armScale = 1.0;          // grows with taps
+    let armsVisible = false;
+
+    // Rage mode
+    let rage = false;
+    const RAGE_THRESHOLD = 8.0;  // taps/sec to enter rage
+    const RAGE_EXIT = 5.5;       // taps/sec to exit rage
+    let rageUntil = 0;           // keep rage for a short period once triggered
+
+    /*********************
+     * Tiny sound engine
+     * (no external files)
+     *********************/
+    let audioCtx = null;
+
+    function ensureAudio() {
+      if (!audioCtx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        audioCtx = new AC();
+      }
+      // if suspended, resume on user interaction
+      if (audioCtx.state === "suspended") audioCtx.resume();
+    }
+
+    function blip({ freq = 180, dur = 0.05, type = "sine", gain = 0.08 }) {
+      if (!audioCtx) return;
+      const t0 = audioCtx.currentTime;
+
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, t0);
+
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(gain, t0 + 0.01);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+
+      osc.connect(g).connect(audioCtx.destination);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.02);
+    }
+
+    function thump() {
+      // short low hit
+      blip({ freq: 120, dur: 0.06, type: "triangle", gain: 0.09 });
+      // tiny click
+      blip({ freq: 520, dur: 0.02, type: "square", gain: 0.02 });
+    }
+
+    function rageSound() {
+      // rising “power up”
+      if (!audioCtx) return;
+      const t0 = audioCtx.currentTime;
+
+      const osc = audioCtx.createOscillator();
+      const g = audioCtx.createGain();
+      osc.type = "sawtooth";
+
+      osc.frequency.setValueAtTime(180, t0);
+      osc.frequency.exponentialRampToValueAtTime(520, t0 + 0.18);
+
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(0.12, t0 + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.20);
+
+      osc.connect(g).connect(audioCtx.destination);
+      osc.start(t0);
+      osc.stop(t0 + 0.22);
+
+      // extra punch
+      blip({ freq: 90, dur: 0.08, type: "triangle", gain: 0.10 });
+    }
+
+    /*********************
+     * Visual effects
+     *********************/
+    function spawnSweat(intensity = 1) {
+      // intensity ~ 1 normal, 2+ rage
+      const drops = rage ? 2 : 1;
+      const total = Math.min(4, drops * intensity);
+
+      for (let i = 0; i < total; i++) {
+        const d = document.createElement("div");
+        d.className = "sweat";
+        d.textContent = "💦";
+
+        // position near head/upper body
+        const x = 50 + (Math.random() * 40 - 20); // center-ish %
+        const y = 22 + (Math.random() * 10 - 5);  // top-ish %
+        d.style.left = x + "%";
+        d.style.top  = y + "%";
+
+        const dx = (Math.random() * 24 - 12) + "px";
+        d.style.setProperty("--dx", dx);
+
+        arena.appendChild(d);
+        setTimeout(() => d.remove(), 950);
+      }
+    }
+
+    function pushupAnim() {
+      girl.style.transform = "translateY(22px)";
+      setTimeout(() => { girl.style.transform = "translateY(0px)"; }, 90);
+    }
+
+    function updateArms() {
+      // show arms after a few pushups
+      if (!armsVisible && count >= 5) {
+        armsVisible = true;
+        armsWrap.style.opacity = "1";
+      }
+
+      // scale arms based on growth
+      const s = armScale.toFixed(3);
+      armL.style.transform = `translateX(-92px) translateY(4px) scale(${s})`;
+      armR.style.transform = `translateX( 92px) translateY(4px) scale(${s})`;
+    }
+
+    /*********************
+     * Speed + rage logic
+     *********************/
+    function currentSpeed() {
+      const now = performance.now();
+      while (tapTimes.length && (now - tapTimes[0]) > 1000) tapTimes.shift();
+      return tapTimes.length; // taps per last 1s
+    }
+
+    function setRage(on) {
+      rage = on;
+      document.body.classList.toggle("rage", rage);
+      modeEl.textContent = rage ? "RAGE 💥" : "Chill";
+      hintEl.textContent = rage
+        ? "RAGE MODE: faster growth + extra sweat + extra sound 🔥"
+        : "Tip: tap ~8+ times/sec for 💥 Rage Mode";
+    }
+
+    function maybeToggleRage(speed) {
+      const now = performance.now();
+
+      if (speed >= RAGE_THRESHOLD) {
+        rageUntil = now + 900; // keep rage active for at least 0.9s
+        if (!rage) {
+          setRage(true);
+          rageSound();
+          stageEl.classList.remove("shake");
+          void stageEl.offsetWidth; // reflow to retrigger animation
+          stageEl.classList.add("shake");
+        }
+      }
+
+      if (rage) {
+        // stay in rage while within grace window OR speed still high enough
+        const stillRaging = (now < rageUntil) || (speed >= RAGE_EXIT);
+        if (!stillRaging) setRage(false);
+      }
+    }
+
+    /*********************
+     * Main action
+     *********************/
+    function doPushup() {
+      const now = performance.now();
+      tapTimes.push(now);
+
+      count++;
+      countEl.textContent = count;
+
+      const spd = currentSpeed();
+      speedEl.textContent = spd.toFixed(1) + " /s";
+
+      maybeToggleRage(spd);
+
+      // animation + sweat
+      pushupAnim();
+      spawnSweat(rage ? 2 : 1);
+
+      // sound
+      thump();
+
+      // growth tuning
+      // normal: slow growth; rage: faster growth
+      const growth = rage ? 0.030 : 0.015;
+      armScale = Math.min(2.6, armScale + growth);
+
+      // bonus growth every 10 pushups
+      if (count % 10 === 0) armScale = Math.min(2.6, armScale + (rage ? 0.10 : 0.06));
+
+      updateArms();
+    }
+
+    /*********************
+     * Input handling
+     *********************/
+    const btn = document.getElementById("pushBtn");
+
+    // pointerdown is best for iPhone spam tapping
+    btn.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      ensureAudio();
+      doPushup();
+    });
+
+    // also allow tapping the character area for extra fun
+    arena.addEventListener("pointerdown", (e) => {
+      e.preventDefault();
+      ensureAudio();
+      doPushup();
+    });
+
+    // keep UI speed number updating even when not tapping
+    setInterval(() => {
+      const spd = currentSpeed();
+      speedEl.textContent = spd.toFixed(1) + " /s";
+      maybeToggleRage(spd);
+    }, 180);
+
+    // initialize
+    updateArms();
+  </script>
 </body>
 </html>
-

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Push-Up Power 💪</title>
+    <style>
+        body {
+            text-align: center;
+            font-family: Arial;
+            background: #111;
+            color: white;
+        }
+
+        #girl {
+            font-size: 120px;
+            transition: transform 0.2s ease, font-size 0.2s ease;
+        }
+
+        button {
+            padding: 20px 40px;
+            font-size: 20px;
+            margin-top: 30px;
+            border: none;
+            border-radius: 10px;
+            background: #ff4081;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:active {
+            transform: scale(0.95);
+        }
+
+        #counter {
+            margin-top: 20px;
+            font-size: 24px;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Spam for Gains 💪</h1>
+
+<div id="girl">🏋️‍♀️</div>
+
+<button onclick="doPushup()">PUSH UP</button>
+
+<div id="counter">Push-ups: 0</div>
+
+<script>
+    let count = 0;
+    let size = 120;
+
+    function doPushup() {
+        count++;
+        document.getElementById("counter").innerText = "Push-ups: " + count;
+
+        // Push-up animation
+        let girl = document.getElementById("girl");
+        girl.style.transform = "translateY(20px)";
+        setTimeout(() => {
+            girl.style.transform = "translateY(0px)";
+        }, 100);
+
+        // Increase size (muscle growth)
+        if (count % 10 === 0) {
+            size += 10;
+            girl.style.fontSize = size + "px";
+        }
+    }
+</script>
+
+</body>
+</html>

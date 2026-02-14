@@ -1,238 +1,308 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-  <title>❤️</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>❤️</title>
 
-  <style>
-    :root{
-      --scale: 1;
-    }
+<style>
+:root{
+  --scale: 1;
+}
 
-    *{ box-sizing:border-box; }
+*{ box-sizing:border-box; }
 
-    body{
-      margin:0;
-      background:#000;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      justify-content:center;
-      height:100vh;
-      overflow:hidden;
-      -webkit-text-size-adjust:100%;
-      touch-action: manipulation;
-      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-    }
+body{
+  margin:0;
+  background:#000;
+  color:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  text-align:center;
+  overflow:hidden;
+  -webkit-text-size-adjust:100%;
+  touch-action: manipulation;
+}
 
-    .arena{
-      position:relative;
-      flex:1;
-      width:100%;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      overflow:hidden;
-    }
+.arena{
+  position:relative;
+  height:70vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+}
 
-    #character{
-      width:320px;
-      max-width:90vw;
-      transform: scale(var(--scale));
-      transition: transform 0.15s ease;
-      user-select:none;
-      -webkit-user-drag:none;
-      pointer-events:none;
-    }
+#character{
+  width:320px;
+  max-width:90vw;
+  transform:scale(var(--scale));
+  transition:transform 0.15s ease;
+  pointer-events:none;
+  will-change:transform, opacity;
+}
 
-    /* Message reveal */
-    .message{
-      color:#fff;
-      font-weight:900;
-      font-size: clamp(20px, 5vw, 28px);
-      letter-spacing:0.5px;
-      min-height:40px;
-      margin-bottom:14px;
-      text-align:center;
-    }
+#character.final-spin{
+  animation:spinExplode 0.9s cubic-bezier(.2,.9,.2,1) forwards;
+  transform-origin:center;
+}
 
-    /* Yellow button */
-    #btn{
-      width:min(520px, 94%);
-      margin-bottom:22px;
-      padding:18px;
-      font-size:22px;
-      font-weight:1000;
-      letter-spacing:1px;
-      text-transform:uppercase;
-      border:none;
-      border-radius:14px;
-      background:#ffd400;
-      color:#000;
-      cursor:pointer;
+@keyframes spinExplode{
+  0%   { transform:scale(var(--scale)) rotate(0deg); opacity:1; }
+  70%  { transform:scale(var(--scale)) rotate(1440deg); opacity:1; }
+  100% { transform:scale(calc(var(--scale)*2.3)) rotate(1800deg); opacity:0; }
+}
 
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-      user-select:none;
-    }
+/* Message text (only text on page) */
+.message{
+  font-weight:900;
+  font-size:clamp(20px,5vw,28px);
+  min-height:40px;
+  padding:10px;
+}
 
-    #btn:active{
-      transform:scale(0.98);
-    }
+/* Yellow button */
+#btn{
+  width:min(500px,95%);
+  padding:18px;
+  margin:10px 0 25px 0;
+  font-size:22px;
+  font-weight:1000;
+  text-transform:uppercase;
+  letter-spacing:1px;
+  border:none;
+  border-radius:12px;
+  background:#ffd400;
+  color:#000;
+  cursor:pointer;
+}
 
-    /* Floating word */
-    .wordPop{
-      position:absolute;
-      padding:10px 14px;
-      background:rgba(255,255,255,0.12);
-      border-radius:999px;
-      font-weight:900;
-      color:#fff;
-      pointer-events:none;
-      animation: rise 1.4s ease-out forwards;
-      white-space:nowrap;
-    }
+#btn:active{
+  transform:scale(0.98);
+}
 
-    @keyframes rise{
-      0%{ transform:translate(-50%,0) scale(0.9); opacity:0; }
-      10%{ opacity:1; }
-      100%{ transform:translate(-50%,-80px) scale(1.05); opacity:0; }
-    }
+/* Word pop animation */
+.wordPop{
+  position:absolute;
+  padding:10px 14px;
+  background:rgba(255,255,255,0.12);
+  border-radius:999px;
+  font-weight:900;
+  animation:rise 1.4s ease-out forwards;
+  pointer-events:none;
+  white-space:nowrap;
+}
 
-    /* Hearts */
-    .heart{
-      position:absolute;
-      font-size:22px;
-      pointer-events:none;
-      animation: floatUp 1.2s ease-out forwards;
-    }
+@keyframes rise{
+  0%{ transform:translate(-50%,0) scale(0.9); opacity:0; }
+  10%{ opacity:1; }
+  100%{ transform:translate(-50%,-80px) scale(1.05); opacity:0; }
+}
 
-    @keyframes floatUp{
-      0%{ transform:translate(var(--x0),var(--y0)); opacity:0; }
-      10%{ opacity:1; }
-      100%{ transform:translate(var(--x1),var(--y1)); opacity:0; }
-    }
-  </style>
+/* Hearts */
+.heart{
+  position:absolute;
+  font-size:22px;
+  pointer-events:none;
+  animation:floatUp 1.2s ease-out forwards;
+}
+
+@keyframes floatUp{
+  0%{ transform:translate(var(--x0),var(--y0)); opacity:0; }
+  10%{ opacity:1; }
+  100%{ transform:translate(var(--x1),var(--y1)); opacity:0; }
+}
+
+/* Jumpscare overlay */
+#jumpscare{
+  position:fixed;
+  inset:0;
+  display:none;
+  background:#000;
+  z-index:9999;
+}
+
+#jumpscare.show{
+  display:block;
+}
+
+#jumpscare img{
+  width:100vw;
+  height:100vh;
+  object-fit:cover;
+  animation:shake 0.3s infinite;
+}
+
+@keyframes shake{
+  0%{ transform:translate(0,0); }
+  25%{ transform:translate(-6px,4px); }
+  50%{ transform:translate(6px,-4px); }
+  75%{ transform:translate(-4px,-3px); }
+  100%{ transform:translate(0,0); }
+}
+</style>
 </head>
 
 <body>
 
-  <div class="arena" id="arena">
-    <img id="character" src="cartman.png" alt="Character">
-  </div>
+<div class="arena" id="arena">
+  <img id="character" src="cartman.png" alt="">
+</div>
 
-  <div class="message" id="message"></div>
+<div class="message" id="message"></div>
 
-  <button id="btn">INFLATE</button>
+<button id="btn">INFLATE</button>
 
-  <script>
-    // iOS zoom prevention
-    let lastTouchEnd = 0;
-    document.addEventListener('touchend', function (event) {
-      const now = Date.now();
-      if (now - lastTouchEnd <= 300) event.preventDefault();
-      lastTouchEnd = now;
-    }, { passive: false });
+<div id="jumpscare">
+  <img src="jumpscare.png" alt="">
+</div>
 
-    const character = document.getElementById("character");
-    const arena = document.getElementById("arena");
-    const btn = document.getElementById("btn");
-    const messageEl = document.getElementById("message");
+<script>
+/* Prevent iOS zoom */
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function (event) {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) event.preventDefault();
+  lastTouchEnd = now;
+}, { passive: false });
 
-    let count = 0;
+const character = document.getElementById("character");
+const arena = document.getElementById("arena");
+const btn = document.getElementById("btn");
+const messageEl = document.getElementById("message");
+const jumpscare = document.getElementById("jumpscare");
 
-    const words = ["I", "love", "you,", "be", "my", "valentines"];
-    let revealed = 0;
+let count = 0;
+let finished = false;
 
-    const TOTAL_PRESSES = words.length * 50;
-    const MIN_SCALE = 1;
-    const MAX_SCALE = 3;
+const words = ["I","love","you,","be","my","valentines"];
+let revealed = 0;
 
-    function scaleForCount(c){
-      const progress = Math.min(1, c / TOTAL_PRESSES);
-      const eased = 1 - Math.pow(1 - progress, 2.2);
-      return MIN_SCALE + (MAX_SCALE - MIN_SCALE) * eased;
+const TOTAL = words.length * 50;
+const MIN = 1;
+const MAX = 3;
+
+/* Tap speed for love hearts */
+const tapTimes = [];
+let love = false;
+const LOVE_THRESHOLD = 7;
+let loveUntil = 0;
+
+function currentSpeed(){
+  const now = performance.now();
+  while(tapTimes.length && (now - tapTimes[0]) > 1000) tapTimes.shift();
+  return tapTimes.length;
+}
+
+function updateLove(){
+  const spd = currentSpeed();
+  const now = performance.now();
+  if(spd >= LOVE_THRESHOLD){
+    loveUntil = now + 900;
+    love = true;
+  }
+  if(love){
+    if(now > loveUntil && spd < LOVE_THRESHOLD-1){
+      love = false;
     }
+  }
+}
 
-    function applyScale(){
-      const s = scaleForCount(count);
-      document.documentElement.style.setProperty("--scale", s.toFixed(3));
+function scaleForCount(c){
+  const progress = Math.min(1, c / TOTAL);
+  const eased = 1 - Math.pow(1 - progress, 2.2);
+  return MIN + (MAX - MIN) * eased;
+}
+
+function applyScale(){
+  const s = scaleForCount(count);
+  document.documentElement.style.setProperty("--scale", s.toFixed(3));
+}
+
+function spawnHearts(amount){
+  const rect = character.getBoundingClientRect();
+  const arenaRect = arena.getBoundingClientRect();
+  const sx = rect.left + rect.width/2 - arenaRect.left;
+  const sy = rect.top + rect.height*0.6 - arenaRect.top;
+
+  for(let i=0;i<amount;i++){
+    const h = document.createElement("div");
+    h.className="heart";
+    h.textContent="❤️";
+
+    h.style.left=sx+"px";
+    h.style.top=sy+"px";
+    h.style.setProperty("--x0",(Math.random()*20-10)+"px");
+    h.style.setProperty("--y0","0px");
+    h.style.setProperty("--x1",(Math.random()*350-175)+"px");
+    h.style.setProperty("--y1",-(Math.random()*250+60)+"px");
+
+    arena.appendChild(h);
+    setTimeout(()=>h.remove(),1300);
+  }
+}
+
+function popWord(word){
+  const rect = character.getBoundingClientRect();
+  const arenaRect = arena.getBoundingClientRect();
+  const x = rect.left + rect.width/2 - arenaRect.left;
+  const y = rect.top + rect.height*0.6 - arenaRect.top;
+
+  const w = document.createElement("div");
+  w.className="wordPop";
+  w.textContent=word;
+  w.style.left=x+"px";
+  w.style.top=y+"px";
+  arena.appendChild(w);
+  setTimeout(()=>w.remove(),1500);
+}
+
+function finale(){
+  finished = true;
+  spawnHearts(120);
+  character.classList.add("final-spin");
+
+  setTimeout(()=>{
+    character.style.display="none";
+    jumpscare.classList.add("show");
+  },900);
+}
+
+function maybeReveal(){
+  if(count % 50 === 0 && revealed < words.length){
+    const word = words[revealed];
+    revealed++;
+    popWord(word);
+    messageEl.textContent = words.slice(0,revealed).join(" ");
+    spawnHearts(love ? 30 : 15);
+
+    if(revealed === words.length){
+      document.documentElement.style.setProperty("--scale", MAX);
+      setTimeout(finale,150);
     }
+  }
+}
 
-    function popWord(word){
-      const rect = character.getBoundingClientRect();
-      const arenaRect = arena.getBoundingClientRect();
+function inflate(){
+  if(finished) return;
 
-      const x = rect.left + rect.width/2 - arenaRect.left;
-      const y = rect.top + rect.height*0.6 - arenaRect.top;
+  tapTimes.push(performance.now());
+  count++;
+  applyScale();
+  updateLove();
 
-      const w = document.createElement("div");
-      w.className = "wordPop";
-      w.textContent = word;
-      w.style.left = x + "px";
-      w.style.top = y + "px";
-      arena.appendChild(w);
+  if(love) spawnHearts(10);
+  if(count % 20 === 0) spawnHearts(love ? 35 : 10);
 
-      setTimeout(()=>w.remove(), 1500);
-    }
+  maybeReveal();
+}
 
-    function spawnHearts(amount){
-      const rect = character.getBoundingClientRect();
-      const arenaRect = arena.getBoundingClientRect();
+btn.addEventListener("pointerdown", e=>{
+  e.preventDefault();
+  inflate();
+});
 
-      const sx = rect.left + rect.width/2 - arenaRect.left;
-      const sy = rect.top + rect.height*0.6 - arenaRect.top;
-
-      for(let i=0;i<amount;i++){
-        const h = document.createElement("div");
-        h.className="heart";
-        h.textContent="❤️";
-
-        const dx0=(Math.random()*20-10)+"px";
-        const dy0="0px";
-        const dx1=(Math.random()*300-150)+"px";
-        const dy1=-(Math.random()*250+60)+"px";
-
-        h.style.left=sx+"px";
-        h.style.top=sy+"px";
-        h.style.setProperty("--x0",dx0);
-        h.style.setProperty("--y0",dy0);
-        h.style.setProperty("--x1",dx1);
-        h.style.setProperty("--y1",dy1);
-
-        arena.appendChild(h);
-        setTimeout(()=>h.remove(),1300);
-      }
-    }
-
-    function maybeReveal(){
-      if(count % 50 === 0 && revealed < words.length){
-        const word = words[revealed];
-        revealed++;
-        popWord(word);
-        messageEl.textContent = words.slice(0,revealed).join(" ");
-        spawnHearts(20);
-
-        if(revealed === words.length){
-          spawnHearts(80);
-        }
-      }
-    }
-
-    function inflate(){
-      count++;
-      applyScale();
-      maybeReveal();
-    }
-
-    btn.addEventListener("pointerdown", (e)=>{
-      e.preventDefault();
-      inflate();
-    });
-
-    applyScale();
-  </script>
+setInterval(updateLove,180);
+applyScale();
+</script>
 
 </body>
 </html>

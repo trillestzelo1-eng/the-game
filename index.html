@@ -6,10 +6,7 @@
 <title>❤️</title>
 
 <style>
-:root{
-  --scale: 1;
-}
-
+:root{ --scale: 1; }
 *{ box-sizing:border-box; }
 
 body{
@@ -29,6 +26,7 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
+  overflow:hidden;
 }
 
 #character{
@@ -37,7 +35,7 @@ body{
   transform:scale(var(--scale));
   transition:transform 0.15s ease;
   pointer-events:none;
-  will-change:transform, opacity;
+  will-change:transform, opacity, filter;
 }
 
 #character.final-spin{
@@ -46,12 +44,12 @@ body{
 }
 
 @keyframes spinExplode{
-  0%   { transform:scale(var(--scale)) rotate(0deg); opacity:1; }
-  70%  { transform:scale(var(--scale)) rotate(1440deg); opacity:1; }
-  100% { transform:scale(calc(var(--scale)*2.3)) rotate(1800deg); opacity:0; }
+  0%   { transform:scale(var(--scale)) rotate(0deg); opacity:1; filter:none; }
+  60%  { transform:scale(var(--scale)) rotate(2160deg); opacity:1; filter:none; } /* 6 spins */
+  100% { transform:scale(calc(var(--scale)*2.4)) rotate(2520deg); opacity:0; filter: blur(6px); }
 }
 
-/* Message text (only text on page) */
+/* ONLY text on page */
 .message{
   font-weight:900;
   font-size:clamp(20px,5vw,28px);
@@ -73,13 +71,12 @@ body{
   background:#ffd400;
   color:#000;
   cursor:pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select:none;
 }
+#btn:active{ transform:scale(0.98); }
 
-#btn:active{
-  transform:scale(0.98);
-}
-
-/* Word pop animation */
+/* Word pop */
 .wordPop{
   position:absolute;
   padding:10px 14px;
@@ -90,7 +87,6 @@ body{
   pointer-events:none;
   white-space:nowrap;
 }
-
 @keyframes rise{
   0%{ transform:translate(-50%,0) scale(0.9); opacity:0; }
   10%{ opacity:1; }
@@ -103,15 +99,50 @@ body{
   font-size:22px;
   pointer-events:none;
   animation:floatUp 1.2s ease-out forwards;
+  will-change: transform, opacity;
 }
-
 @keyframes floatUp{
-  0%{ transform:translate(var(--x0),var(--y0)); opacity:0; }
+  0%{ transform:translate(var(--x0),var(--y0)) scale(0.85); opacity:0; }
   10%{ opacity:1; }
-  100%{ transform:translate(var(--x1),var(--y1)); opacity:0; }
+  100%{ transform:translate(var(--x1),var(--y1)) scale(1.25); opacity:0; }
 }
 
-/* Jumpscare overlay */
+/* Explosion particles */
+.particle{
+  position:absolute;
+  width:10px; height:10px;
+  border-radius:999px;
+  background:#fff;
+  pointer-events:none;
+  will-change: transform, opacity;
+  animation:burst 0.75s ease-out forwards;
+  mix-blend-mode: screen;
+}
+@keyframes burst{
+  0%   { transform: translate(0,0) scale(0.9); opacity: 0; }
+  10%  { opacity: 1; }
+  100% { transform: translate(var(--dx), var(--dy)) scale(0.2); opacity: 0; }
+}
+
+/* Flash overlay */
+#flash{
+  position:fixed;
+  inset:0;
+  background:#fff;
+  opacity:0;
+  pointer-events:none;
+  z-index:9998;
+}
+#flash.go{
+  animation:flash 0.22s ease-out forwards;
+}
+@keyframes flash{
+  0%{ opacity:0; }
+  30%{ opacity:1; }
+  100%{ opacity:0; }
+}
+
+/* Jumpscare */
 #jumpscare{
   position:fixed;
   inset:0;
@@ -119,10 +150,7 @@ body{
   background:#000;
   z-index:9999;
 }
-
-#jumpscare.show{
-  display:block;
-}
+#jumpscare.show{ display:block; }
 
 #jumpscare img{
   width:100vw;
@@ -130,13 +158,12 @@ body{
   object-fit:cover;
   animation:shake 0.3s infinite;
 }
-
 @keyframes shake{
-  0%{ transform:translate(0,0); }
-  25%{ transform:translate(-6px,4px); }
-  50%{ transform:translate(6px,-4px); }
-  75%{ transform:translate(-4px,-3px); }
-  100%{ transform:translate(0,0); }
+  0%{ transform:translate(0,0) scale(1.02); }
+  25%{ transform:translate(-8px,5px) scale(1.03); }
+  50%{ transform:translate(8px,-5px) scale(1.03); }
+  75%{ transform:translate(-6px,-4px) scale(1.03); }
+  100%{ transform:translate(0,0) scale(1.02); }
 }
 </style>
 </head>
@@ -151,12 +178,14 @@ body{
 
 <button id="btn">INFLATE</button>
 
+<div id="flash"></div>
+
 <div id="jumpscare">
   <img src="jumpscare.png" alt="">
 </div>
 
 <script>
-/* Prevent iOS zoom */
+/* Prevent iOS double-tap zoom */
 let lastTouchEnd = 0;
 document.addEventListener('touchend', function (event) {
   const now = Date.now();
@@ -169,10 +198,13 @@ const arena = document.getElementById("arena");
 const btn = document.getElementById("btn");
 const messageEl = document.getElementById("message");
 const jumpscare = document.getElementById("jumpscare");
+const flash = document.getElementById("flash");
 
 let count = 0;
 let finished = false;
+let didFullscreenTry = false;
 
+/* Sentence */
 const words = ["I","love","you,","be","my","valentines"];
 let revealed = 0;
 
@@ -180,11 +212,40 @@ const TOTAL = words.length * 50;
 const MIN = 1;
 const MAX = 3;
 
-/* Tap speed for love hearts */
+/* Tap speed -> love hearts */
 const tapTimes = [];
 let love = false;
 const LOVE_THRESHOLD = 7;
 let loveUntil = 0;
+
+/* WebAudio scream */
+let audioCtx = null;
+function ensureAudio(){
+  if (!audioCtx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AC();
+  }
+  if (audioCtx.state === "suspended") audioCtx.resume();
+}
+
+/* Best-effort fullscreen + orientation lock (must be triggered by user gesture) */
+async function tryFullscreenAndOrientation(){
+  if (didFullscreenTry) return;
+  didFullscreenTry = true;
+
+  try{
+    const el = document.documentElement;
+
+    if (el.requestFullscreen) await el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen(); // Safari older
+  }catch(e){ /* ignore */ }
+
+  try{
+    if (screen.orientation && screen.orientation.lock){
+      await screen.orientation.lock("portrait");
+    }
+  }catch(e){ /* ignore */ }
+}
 
 function currentSpeed(){
   const now = performance.now();
@@ -200,15 +261,14 @@ function updateLove(){
     love = true;
   }
   if(love){
-    if(now > loveUntil && spd < LOVE_THRESHOLD-1){
-      love = false;
-    }
+    const keep = now < loveUntil || spd >= LOVE_THRESHOLD - 1;
+    if(!keep) love = false;
   }
 }
 
 function scaleForCount(c){
-  const progress = Math.min(1, c / TOTAL);
-  const eased = 1 - Math.pow(1 - progress, 2.2);
+  const p = Math.min(1, c / TOTAL);
+  const eased = 1 - Math.pow(1 - p, 2.2);
   return MIN + (MAX - MIN) * eased;
 }
 
@@ -226,17 +286,53 @@ function spawnHearts(amount){
   for(let i=0;i<amount;i++){
     const h = document.createElement("div");
     h.className="heart";
-    h.textContent="❤️";
+    h.textContent = (Math.random() < 0.2) ? "💖" : "❤️";
 
     h.style.left=sx+"px";
     h.style.top=sy+"px";
     h.style.setProperty("--x0",(Math.random()*20-10)+"px");
-    h.style.setProperty("--y0","0px");
-    h.style.setProperty("--x1",(Math.random()*350-175)+"px");
-    h.style.setProperty("--y1",-(Math.random()*250+60)+"px");
+    h.style.setProperty("--y0",(Math.random()*10-5)+"px");
+    h.style.setProperty("--x1",(Math.random()*360-180)+"px");
+    h.style.setProperty("--y1",-(Math.random()*280+80)+"px");
 
     arena.appendChild(h);
     setTimeout(()=>h.remove(),1300);
+  }
+}
+
+function spawnExplosionParticles(amount){
+  const rect = character.getBoundingClientRect();
+  const arenaRect = arena.getBoundingClientRect();
+  const cx = rect.left + rect.width/2 - arenaRect.left;
+  const cy = rect.top + rect.height*0.6 - arenaRect.top;
+
+  for(let i=0;i<amount;i++){
+    const p = document.createElement("div");
+    p.className = "particle";
+
+    // random size
+    const size = 6 + Math.random()*10;
+    p.style.width = size + "px";
+    p.style.height = size + "px";
+
+    // random bright color-ish
+    const bright = 180 + Math.floor(Math.random()*75);
+    const tint = Math.floor(Math.random()*90);
+    p.style.background = `rgb(${bright}, ${bright - tint}, ${bright})`;
+
+    // direction
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 90 + Math.random()*220;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+
+    p.style.left = cx + "px";
+    p.style.top = cy + "px";
+    p.style.setProperty("--dx", dx.toFixed(1) + "px");
+    p.style.setProperty("--dy", dy.toFixed(1) + "px");
+
+    arena.appendChild(p);
+    setTimeout(()=>p.remove(), 800);
   }
 }
 
@@ -255,15 +351,95 @@ function popWord(word){
   setTimeout(()=>w.remove(),1500);
 }
 
+/* FLASH */
+function doFlash(){
+  flash.classList.remove("go");
+  void flash.offsetWidth;
+  flash.classList.add("go");
+}
+
+/* SCREAM-like sound (noise + pitch sweep). Loud. */
+function playScream(){
+  if(!audioCtx) return;
+
+  const t0 = audioCtx.currentTime;
+
+  // Noise buffer
+  const dur = 0.9;
+  const len = Math.floor(audioCtx.sampleRate * dur);
+  const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for(let i=0;i<len;i++){
+    // shaped noise
+    data[i] = (Math.random()*2-1) * (1 - i/len);
+  }
+
+  const noise = audioCtx.createBufferSource();
+  noise.buffer = buf;
+
+  // Bandpass filter to make it "screamier"
+  const bp = audioCtx.createBiquadFilter();
+  bp.type = "bandpass";
+  bp.frequency.setValueAtTime(800, t0);
+  bp.frequency.exponentialRampToValueAtTime(2200, t0 + 0.35);
+  bp.frequency.exponentialRampToValueAtTime(900, t0 + 0.9);
+  bp.Q.setValueAtTime(2.5, t0);
+
+  // Gain envelope
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.0001, t0);
+  g.gain.exponentialRampToValueAtTime(0.9, t0 + 0.03);  // LOUD
+  g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.9);
+
+  // Add a harsh oscillator layer
+  const osc = audioCtx.createOscillator();
+  osc.type = "sawtooth";
+  osc.frequency.setValueAtTime(300, t0);
+  osc.frequency.exponentialRampToValueAtTime(900, t0 + 0.25);
+  osc.frequency.exponentialRampToValueAtTime(420, t0 + 0.9);
+
+  const og = audioCtx.createGain();
+  og.gain.setValueAtTime(0.0001, t0);
+  og.gain.exponentialRampToValueAtTime(0.35, t0 + 0.02);
+  og.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.9);
+
+  noise.connect(bp).connect(g).connect(audioCtx.destination);
+  osc.connect(og).connect(audioCtx.destination);
+
+  noise.start(t0);
+  noise.stop(t0 + dur);
+  osc.start(t0);
+  osc.stop(t0 + dur);
+}
+
+function showJumpscare(){
+  jumpscare.classList.add("show");
+  btn.disabled = true;
+  btn.style.opacity = "0.65";
+  playScream();
+}
+
 function finale(){
   finished = true;
+
+  // flash + particle explosion + heart burst
+  doFlash();
+  spawnExplosionParticles(140);
   spawnHearts(120);
+
   character.classList.add("final-spin");
 
+  // near the end of spin, flash again and more particles
+  setTimeout(() => {
+    doFlash();
+    spawnExplosionParticles(120);
+  }, 520);
+
+  // after spinExplode ends: remove character and jumpscare
   setTimeout(()=>{
     character.style.display="none";
-    jumpscare.classList.add("show");
-  },900);
+    showJumpscare();
+  }, 920);
 }
 
 function maybeReveal(){
@@ -272,11 +448,13 @@ function maybeReveal(){
     revealed++;
     popWord(word);
     messageEl.textContent = words.slice(0,revealed).join(" ");
+
     spawnHearts(love ? 30 : 15);
 
     if(revealed === words.length){
-      document.documentElement.style.setProperty("--scale", MAX);
-      setTimeout(finale,150);
+      // force max size before finale
+      document.documentElement.style.setProperty("--scale", String(MAX));
+      setTimeout(finale, 160);
     }
   }
 }
@@ -284,8 +462,13 @@ function maybeReveal(){
 function inflate(){
   if(finished) return;
 
+  // first user interaction: enable audio + fullscreen attempt
+  ensureAudio();
+  tryFullscreenAndOrientation();
+
   tapTimes.push(performance.now());
   count++;
+
   applyScale();
   updateLove();
 
@@ -295,13 +478,13 @@ function inflate(){
   maybeReveal();
 }
 
-btn.addEventListener("pointerdown", e=>{
-  e.preventDefault();
-  inflate();
-});
+btn.addEventListener("pointerdown", e => { e.preventDefault(); inflate(); });
 
-setInterval(updateLove,180);
+// keep love responsive even if they stop tapping
+setInterval(updateLove, 180);
+
 applyScale();
+messageEl.textContent = "";
 </script>
 
 </body>

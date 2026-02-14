@@ -133,16 +133,14 @@ body{
   pointer-events:none;
   z-index:9998;
 }
-#flash.go{
-  animation:flash 0.22s ease-out forwards;
-}
+#flash.go{ animation:flash 0.22s ease-out forwards; }
 @keyframes flash{
   0%{ opacity:0; }
   30%{ opacity:1; }
   100%{ opacity:0; }
 }
 
-/* Jumpscare */
+/* Jumpscare overlay (NO RUMBLE) */
 #jumpscare{
   position:fixed;
   inset:0;
@@ -156,14 +154,6 @@ body{
   width:100vw;
   height:100vh;
   object-fit:cover;
-  animation:shake 0.3s infinite;
-}
-@keyframes shake{
-  0%{ transform:translate(0,0) scale(1.02); }
-  25%{ transform:translate(-8px,5px) scale(1.03); }
-  50%{ transform:translate(8px,-5px) scale(1.03); }
-  75%{ transform:translate(-6px,-4px) scale(1.03); }
-  100%{ transform:translate(0,0) scale(1.02); }
 }
 </style>
 </head>
@@ -235,16 +225,15 @@ async function tryFullscreenAndOrientation(){
 
   try{
     const el = document.documentElement;
-
     if (el.requestFullscreen) await el.requestFullscreen();
-    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen(); // Safari older
-  }catch(e){ /* ignore */ }
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  }catch(e){}
 
   try{
     if (screen.orientation && screen.orientation.lock){
       await screen.orientation.lock("portrait");
     }
-  }catch(e){ /* ignore */ }
+  }catch(e){}
 }
 
 function currentSpeed(){
@@ -310,17 +299,14 @@ function spawnExplosionParticles(amount){
     const p = document.createElement("div");
     p.className = "particle";
 
-    // random size
     const size = 6 + Math.random()*10;
     p.style.width = size + "px";
     p.style.height = size + "px";
 
-    // random bright color-ish
     const bright = 180 + Math.floor(Math.random()*75);
     const tint = Math.floor(Math.random()*90);
     p.style.background = `rgb(${bright}, ${bright - tint}, ${bright})`;
 
-    // direction
     const angle = Math.random() * Math.PI * 2;
     const dist = 90 + Math.random()*220;
     const dx = Math.cos(angle) * dist;
@@ -351,33 +337,27 @@ function popWord(word){
   setTimeout(()=>w.remove(),1500);
 }
 
-/* FLASH */
 function doFlash(){
   flash.classList.remove("go");
   void flash.offsetWidth;
   flash.classList.add("go");
 }
 
-/* SCREAM-like sound (noise + pitch sweep). Loud. */
+/* Loud scream-like sound */
 function playScream(){
   if(!audioCtx) return;
-
   const t0 = audioCtx.currentTime;
-
-  // Noise buffer
   const dur = 0.9;
+
   const len = Math.floor(audioCtx.sampleRate * dur);
   const buf = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
   const data = buf.getChannelData(0);
   for(let i=0;i<len;i++){
-    // shaped noise
     data[i] = (Math.random()*2-1) * (1 - i/len);
   }
-
   const noise = audioCtx.createBufferSource();
   noise.buffer = buf;
 
-  // Bandpass filter to make it "screamier"
   const bp = audioCtx.createBiquadFilter();
   bp.type = "bandpass";
   bp.frequency.setValueAtTime(800, t0);
@@ -385,13 +365,11 @@ function playScream(){
   bp.frequency.exponentialRampToValueAtTime(900, t0 + 0.9);
   bp.Q.setValueAtTime(2.5, t0);
 
-  // Gain envelope
   const g = audioCtx.createGain();
   g.gain.setValueAtTime(0.0001, t0);
-  g.gain.exponentialRampToValueAtTime(0.9, t0 + 0.03);  // LOUD
+  g.gain.exponentialRampToValueAtTime(0.9, t0 + 0.03);
   g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.9);
 
-  // Add a harsh oscillator layer
   const osc = audioCtx.createOscillator();
   osc.type = "sawtooth";
   osc.frequency.setValueAtTime(300, t0);
@@ -413,7 +391,7 @@ function playScream(){
 }
 
 function showJumpscare(){
-  jumpscare.classList.add("show");
+  jumpscare.classList.add("show"); // instant full-screen
   btn.disabled = true;
   btn.style.opacity = "0.65";
   playScream();
@@ -422,20 +400,17 @@ function showJumpscare(){
 function finale(){
   finished = true;
 
-  // flash + particle explosion + heart burst
   doFlash();
-  spawnExplosionParticles(140);
+  spawnExplosionParticles(160);
   spawnHearts(120);
 
   character.classList.add("final-spin");
 
-  // near the end of spin, flash again and more particles
   setTimeout(() => {
     doFlash();
     spawnExplosionParticles(120);
   }, 520);
 
-  // after spinExplode ends: remove character and jumpscare
   setTimeout(()=>{
     character.style.display="none";
     showJumpscare();
@@ -452,7 +427,6 @@ function maybeReveal(){
     spawnHearts(love ? 30 : 15);
 
     if(revealed === words.length){
-      // force max size before finale
       document.documentElement.style.setProperty("--scale", String(MAX));
       setTimeout(finale, 160);
     }
@@ -462,7 +436,6 @@ function maybeReveal(){
 function inflate(){
   if(finished) return;
 
-  // first user interaction: enable audio + fullscreen attempt
   ensureAudio();
   tryFullscreenAndOrientation();
 
@@ -479,8 +452,6 @@ function inflate(){
 }
 
 btn.addEventListener("pointerdown", e => { e.preventDefault(); inflate(); });
-
-// keep love responsive even if they stop tapping
 setInterval(updateLove, 180);
 
 applyScale();
@@ -489,4 +460,3 @@ messageEl.textContent = "";
 
 </body>
 </html>
-
